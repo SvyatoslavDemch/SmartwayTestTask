@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<IsTestProject>true</IsTestProject>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Effort.EF6" Version="2.2.17" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.25" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.8.0" />
+		<PackageReference Include="xunit.assert" Version="2.6.2" />
+		<PackageReference Include="xunit.extensibility.core" Version="2.6.2" />
+		<PackageReference Include="xunit" Version="2.6.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
+	</ItemGroup>
+
+<ItemGroup>
+    <None Update="testhost.deps.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartwayTest.API\SmartwayTest.API.csproj" />
+  </ItemGroup>
+
+</Project>
