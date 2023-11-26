@@ -35,13 +35,14 @@ public class CompanyControllerIntegrationTests : IClassFixture<WebApplicationFac
 
         Assert.NotNull(employees);
     }
+
     [Fact]
     public async Task GetEmployeesByCompany_ReturnsNotFound()
     {
         var client = _webApplicationFactory.CreateClient();
 
         var response = await client.GetAsync("api/companies/14/employees");
-        Assert.True(response.StatusCode == HttpStatusCode.NotFound); 
+        Assert.True(response.StatusCode == HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -58,9 +59,9 @@ public class CompanyControllerIntegrationTests : IClassFixture<WebApplicationFac
 
     [Fact]
     public async Task CreateCompany_ReturnsOkResul()
-    { 
+    {
         var client = _webApplicationFactory.CreateClient();
-        var companyDto = new CompanyDto (Name: "Test Company" );
+        var companyDto = new CompanyDto(Name: "Test Company");
         var content = new StringContent(JsonConvert.SerializeObject(companyDto), Encoding.UTF8, "application/json");
 
         var response = await client.PostAsync("/api/companies", content);
@@ -75,7 +76,7 @@ public class CompanyControllerIntegrationTests : IClassFixture<WebApplicationFac
     {
 
         var client = _webApplicationFactory.CreateClient();
-        var companyDto = new CompanyDto (Name: "Updated Company");
+        var companyDto = new CompanyDto(Name: "Updated Company");
         var content = new StringContent(JsonConvert.SerializeObject(companyDto), Encoding.UTF8, "application/json");
 
         var response = await client.PutAsync("/api/companies", content);

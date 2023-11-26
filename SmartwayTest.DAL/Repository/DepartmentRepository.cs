@@ -23,9 +23,9 @@ namespace SmartwayTest.DAL.Repository
         public async Task<int> CreateDepartment(Department department)
         {
             string sql = @"
-                      INSERT INTO Departments (DepartmentPhone,DepartmentName, CompanyId)
+                      INSERT INTO Departments (Phone,Name, CompanyId)
                       OUTPUT INSERTED.Id
-                      VALUES (@DepartmentPhone, @DepartmentName, @CompanyId);";
+                      VALUES (@Phone, @Name, @CompanyId);";
 
             int departmentId = await _dbConnection.QuerySingleAsync<int>(sql, department);
             return departmentId;
@@ -44,12 +44,20 @@ namespace SmartwayTest.DAL.Repository
             return department;
         }
 
-        public async Task<List<Employee>> GetEmployeesByDepartamentId(int departmentId)
+        public async Task<List<Employee>> GetEmployeesByDepartmentId(int departmentId)
         {
             string sql = @"
-             SELECT e.Id,e.EmployeeName,e.EmployeeSurname,e.EmployeePhone,
-                 p.Id,p.Type, p.Number,
-                 d.Id,d.DepartmentName, d.DepartmentPhone, d.CompanyId
+             SELECT e.Id,
+                    e.Name,
+                    e.Surname,
+                    e.Phone,
+                    p.Id,
+                    p.Type,
+                    p.Number,
+                    d.Id,
+                    d.Name,
+                    d.Phone,
+                    d.CompanyId
              FROM Employees e
              INNER JOIN Passports p ON e.Id = p.EmployeeId
              INNER JOIN Departments d ON e.DepartmentId = d.Id
@@ -70,9 +78,9 @@ namespace SmartwayTest.DAL.Repository
 
         public async Task UpdateDepartment(Department department)
         {
-            string sql = @"UPDATE Departaments set
-                            DepartmentName = @DepartamentName,
-                            DepartmentPhone = @DepartamentPhone where id = @DepartmentId";
+            string sql = @"UPDATE Departments set
+                            Name = @Name,
+                            Phone = @Phone where id = @DepartmentId";
 
             await _dbConnection.ExecuteAsync(sql, department);
 

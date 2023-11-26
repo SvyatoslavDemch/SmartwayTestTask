@@ -13,7 +13,7 @@ namespace SmartwayTest.Core.Models
     {
         [Key]
         public int Id { get; set; }
-        public string CompanyName { get; set; }
+        public string Name { get; set; }
         public List<Department>? Departments{ get; set; }
 
         public List<Employee>? Employees { get; set; } 

@@ -1,4 +1,4 @@
 ﻿namespace SmartwayTest.API.Dtos
 {
-    public record CompanyDto(string Name);
+    public record CompanyDto(string? Name);
 }

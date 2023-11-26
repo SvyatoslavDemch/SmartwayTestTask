@@ -15,14 +15,14 @@ namespace SmartwayTest.DAL.Repository
             _dbConnection = dbConnection;
         }
 
-        public async Task<int> CreateComapny(Company company)
+        public async Task<int> CreateCompany(Company company)
         {
             string sql = @"
-                    INSERT INTO Companies (CompanyName)
+                    INSERT INTO Companies (Name)
                     OUTPUT INSERTED.Id
-                    VALUES (@CompanyName);";
+                    VALUES (@Name);";
 
-            int companyId = await _dbConnection.ExecuteScalarAsync<int>(sql, new { CompanyName = company.CompanyName });
+            int companyId = await _dbConnection.ExecuteScalarAsync<int>(sql, new { Name = company.Name });
             return companyId;
         }
 
@@ -34,41 +34,46 @@ namespace SmartwayTest.DAL.Repository
 
         public async Task<Company> GetCompanyById(int companyId)
         {
-            string sql = "SELECT id FROM Companies WHERE Id = @CompanyId";
+            string sql = "SELECT * FROM Companies WHERE Id = @CompanyId";
             var company = await _dbConnection.QuerySingleAsync<Company>(sql, new { CompanyId = companyId });
             return company;
         }
 
         public async Task<List<Employee>> GetEmployeesByCompanyId(int companyId)
         {
-
             var sql = @"SELECT 
-                        e.Id, e.EmployeeName,e.EmployeeSurname,e.EmployeePhone, 
-                        p.Id, p.Type,p.Number,
-                        d.Id, d.DepartmentName, d.DepartmentPhone
+                        e.Id,
+                        e.Name,
+                        e.Surname,
+                        e.Phone, 
+                        p.Id,
+                        p.Type,
+                        p.Number,
+                        d.Id,
+                        d.Name,
+                        d.Phone
                     FROM Employees e
                     INNER JOIN Passports p ON e.Id = p.EmployeeId
                     INNER JOIN Departments d ON e.DepartmentId = d.Id
                     WHERE d.CompanyId = @CompanyId";
 
             var employees = await _dbConnection.QueryAsync<Employee, Passport, Department, Employee>(sql,
-                (e, p, d) =>
+                (employee, passport, department) =>
                 {
-                    e.Passport = p;
-                    e.Department = d;
-                    return e;
+                    employee.Passport = passport;
+                    employee.Department = department;
+                    return employee;
                 },
                 new { CompanyId = companyId },
                 splitOn: "Id");
 
-            return employees.ToList();
-            
+            return employees.ToList();            
         }
 
-        public async Task UpdateComapny(Company company)
+        public async Task UpdateCompany(Company company)
         {
             string sql = @"UPDATE COMPANIES 
-                            SET CompanyName = @CompanyName
+                            SET Name = @Name
                             where id = @Id ";
 
             await _dbConnection.ExecuteAsync(sql, company);

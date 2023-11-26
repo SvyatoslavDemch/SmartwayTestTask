@@ -10,13 +10,9 @@ namespace SmartwayTest.Core.Interfaces
     public interface IDepartmentRepository
     {
         Task<int> CreateDepartment(Department department);
-
         Task<Department> GetDepartmentById(int departmentId);
-
-        Task<List<Employee>> GetEmployeesByDepartamentId(int departmentId);
-
+        Task<List<Employee>> GetEmployeesByDepartmentId(int departmentId);
         Task DeleteDepartment(int departmentId);
-
         Task UpdateDepartment(Department department);
     }
 }

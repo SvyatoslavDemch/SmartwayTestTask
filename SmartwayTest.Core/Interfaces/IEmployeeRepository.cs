@@ -10,9 +10,9 @@ namespace SmartwayTest.Core.Interfaces
     public interface IEmployeeRepository
     {
         Task<int> CreateEmployee(Employee employee);
-        Task<Employee> GetEmployeeById(int employeeId);
+        Task<Employee?> GetEmployeeById(int employeeId);
         Task DeleteEmployee(int employeeId);
-        Task UpdateEmployee(Employee currentEmployee, Employee modifEmployee);
+        Task UpdateEmployee(Employee currentEmployee, Employee updatedEmployee);
         Task UpdatePassport(Passport passport);
 
     }

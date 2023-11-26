@@ -4,6 +4,10 @@ using Microsoft.Data.SqlClient;
 using Dapper;
 using System.ComponentModel.Design;
 using System.Data;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 
 namespace SmartwayTest.DAL.Repository
 {
@@ -23,16 +27,16 @@ namespace SmartwayTest.DAL.Repository
                 {
 
                     string insertEmployee = @"
-                INSERT INTO Employees (EmployeeName, EmployeeSurname, EmployeePhone, DepartmentID)
+                INSERT INTO Employees (Name, Surname, Phone, DepartmentID)
                     OUTPUT INSERTED.Id
-                VALUES (@EmployeeName, @EmployeeSurname, @EmployeePhone, @DepartmentId);
+                VALUES (@Name, @Surname, @Phone, @DepartmentId);
                 ;";
 
                     int employeeId = await _dbConnection.QuerySingleAsync<int>(insertEmployee, new
                     {
-                        employee.EmployeeName,
-                        employee.EmployeeSurname,
-                        employee.EmployeePhone,
+                        employee.Name,
+                        employee.Surname,
+                        employee.Phone,
                         employee.DepartmentId
                     }, transaction);
 
@@ -55,7 +59,7 @@ namespace SmartwayTest.DAL.Repository
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    throw new Exception(ex.Message);
+                    throw new Exception("Ошибка при добавлении нового сотрудника");
                 }
             }
         }
@@ -66,11 +70,19 @@ namespace SmartwayTest.DAL.Repository
             await _dbConnection.ExecuteAsync(sql, new { EmployeeId = employeeId });
         }
 
-        public async Task<Employee> GetEmployeeById(int employeeId)
+        public async Task<Employee?> GetEmployeeById(int employeeId)
         {
-            string sql = @"SELECT e.Id,e.EmployeeName,e.EmployeeSurname,e.EmployeePhone,
-                                  p.Id,p.Type, p.Number,
-                                  d.Id,d.DepartmentName, d.DepartmentPhone, d.CompanyId
+            string sql = @"SELECT e.Id,
+                                  e.Name,
+                                  e.Surname,
+                                  e.Phone,
+                                  p.Id,
+                                  p.Type, 
+                                  p.Number,
+                                  d.Id,
+                                  d.Name, 
+                                  d.Phone,
+                                  d.CompanyId
                             FROM Employees e
                             INNER JOIN Passports p ON e.Id = p.EmployeeId
                             INNER JOIN Departments d ON e.DepartmentId = d.Id
@@ -87,19 +99,7 @@ namespace SmartwayTest.DAL.Repository
                 splitOn: "Id");
             return employee.FirstOrDefault();
         }
-        public async Task UpdateEmployee(Employee currentEmployee, Employee modifEmployee)
-        {
-            var changedFields = ChangedFields(currentEmployee, modifEmployee, out var parameters);
 
-            if (changedFields.Count == 0)
-                return;
-
-            string fieldsToUpdate = string.Join(", ", changedFields.Select(field => $"{field} = @{field}"));
-
-            string sql = $@"UPDATE Employees SET {fieldsToUpdate} WHERE Id = @Id";
-
-            await _dbConnection.ExecuteAsync(sql, parameters);
-        }
         public async Task UpdatePassport(Passport passport)
         {
             string sql = @"UPDATE Passports SET 
@@ -108,34 +108,63 @@ namespace SmartwayTest.DAL.Repository
                                  where id = @Id";
             await _dbConnection.ExecuteAsync(sql, passport);
         }
-
-        private List<string> ChangedFields(Employee currentEmployee, Employee modifEmployee, out DynamicParameters parameters)
+        
+        public async Task UpdateEmployee(Employee currentEmployee, Employee updatedEmployee)
         {
-            parameters = new DynamicParameters();
-            var changedFields = new List<string>();
-
-            if (currentEmployee.EmployeeName != modifEmployee.EmployeeName)
+            try
             {
-                parameters.Add("@EmployeeName", modifEmployee.EmployeeName);
-                changedFields.Add("EmployeeName");
-            }
+                var update = CreateUpdateScript<Employee>(currentEmployee, updatedEmployee);
 
-            if (currentEmployee.EmployeeSurname != modifEmployee.EmployeeSurname)
+                await _dbConnection.ExecuteAsync(update.script, update.parameters);
+            }
+            catch(Exception ex)
             {
-                parameters.Add("@EmployeeSurname", modifEmployee.EmployeeSurname);
-                changedFields.Add("EmployeeSurname");
+                throw new Exception(ex.Message);
             }
-
-            if (currentEmployee.EmployeePhone != modifEmployee.EmployeePhone)
-            {
-                parameters.Add("@EmployeePhone", modifEmployee.EmployeePhone);
-                changedFields.Add("EmployeePhone");
-            }
-
-            parameters.Add("@Id", currentEmployee.Id);
-
-            return changedFields;
         }
 
+        private (string script, DynamicParameters parameters) CreateUpdateScript<T>(T currentObject, T updatedObject)
+        {
+            var parameters = new DynamicParameters();
+            var changedFields = new List<string>();
+            var properties = typeof(T).GetProperties();
+            var tableName = GetTableName<T>();
+            var updateScript = new StringBuilder($"UPDATE {tableName} SET ");
+
+            foreach (var property in properties)
+            {
+                if (property.PropertyType.IsClass && property.PropertyType != typeof(string) 
+                    || property.Name.Equals("Id",StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                object currentValue = property.GetValue(currentObject);
+                object updatedValue = property.GetValue(updatedObject);
+
+                if (!object.Equals(currentValue, updatedValue))
+                {
+                    parameters.Add($"@{property.Name}", updatedValue);
+                    changedFields.Add(property.Name);
+                }
+            }
+
+            if (changedFields.Count == 0)
+                throw new Exception("Не найдены значения для обновления");
+
+            var idProperty = properties.FirstOrDefault(p => p.Name == "Id");
+            if (idProperty != null)
+            {
+                object idValue = idProperty.GetValue(currentObject);
+                parameters.Add("@Id", idValue);
+            }
+            updateScript.Append(string.Join(", ", changedFields.Select(field => $"{field} = @{field}")));
+            updateScript.Append(" WHERE Id = @Id");
+
+            return (updateScript.ToString(), parameters);
+        }
+        private string? GetTableName<T>()
+        {
+            var tableAttribute = typeof(T).GetCustomAttributes(typeof(TableAttribute), true).First() as TableAttribute;
+            return tableAttribute?.Name;
+        }
     }
 }

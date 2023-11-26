@@ -12,9 +12,9 @@ namespace SmartwayTest.Core.Models
     public class Employee
     {
         public int Id { get; set; }
-        public string EmployeeName { get; set; }
-        public string EmployeeSurname { get; set; }
-        public string EmployeePhone { get; set; }
+        public string Name { get; set; }
+        public string Surname { get; set; }
+        public string Phone { get; set; }
         public Passport Passport { get; set; }
         public Department Department { get; set; }
         public int? DepartmentId { get; set; }

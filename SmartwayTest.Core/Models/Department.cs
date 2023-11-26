@@ -13,8 +13,8 @@ namespace SmartwayTest.Core.Models
     public class Department
     {
         public int Id { get; set; }
-        public string DepartmentName { get; set; }
-        public string DepartmentPhone { get; set; }
+        public string Name { get; set; }
+        public string Phone { get; set; }
         public int CompanyId { get; set; }
         public ICollection<Employee>? Employees { get; set; }
     }
