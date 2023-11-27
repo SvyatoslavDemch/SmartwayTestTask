@@ -52,7 +52,7 @@ namespace SmartwayTest.API.Controllers
         /// <param name="departmentDto">Данные для нового подразделения.</param>
         /// <returns>Возвращает идентификатор созданного подразделения в случае успешного выполнения; в противном случае возвращает NotFound.</returns>
         [HttpPost("{companyId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]        
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateDepartment(int companyId, [FromBody] DepartmentDto departmentDto)
         {
@@ -88,21 +88,21 @@ namespace SmartwayTest.API.Controllers
             if (employees.Count == 0)
                 return NotFound();
 
-                var employeesDto = employees.Select(r => new EmployeeDto(
-                Name: r.Name,
-                Surname: r.Surname,
-                Phone: r.Phone,
-                CompanyId: r.Department.CompanyId,
-                Passport: new PassportDto
-                (
-                    Type: r.Passport.Type,
-                    Number: r.Passport.Number
-                ),
-                Department: new DepartmentDto
-                (
-                    Name: r.Department.Name,
-                    Phone: r.Department.Phone
-                ))).ToArray();
+            var employeesDto = employees.Select(r => new EmployeeDto(
+            Name: r.Name,
+            Surname: r.Surname,
+            Phone: r.Phone,
+            CompanyId: r.Department.CompanyId,
+            Passport: new PassportDto
+            (
+                Type: r.Passport.Type,
+                Number: r.Passport.Number
+            ),
+            Department: new DepartmentDto
+            (
+                Name: r.Department.Name,
+                Phone: r.Department.Phone
+            ))).ToArray();
 
             return Ok(employeesDto);
         }
@@ -125,20 +125,38 @@ namespace SmartwayTest.API.Controllers
         /// Обновляет информацию о существующем подразделении.
         /// </summary>
         /// <param name="departmentDto">Обновленная информация о подразделении.</param>
-        /// <returns>Возвращает NoContent, если подразделение успешно обновлено.</returns>
-        [HttpPut]
+        /// <returns>
+        /// Возвращает NoContent, если подразделение успешно обновлено.
+        /// В случае ошибки при обновлении возвращает BadRequest с описанием ошибки.
+        /// Если подразделение с указанным идентификатором не найдено, возвращает NotFound.
+        /// </returns>
+        [HttpPut("{departmentId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateDepartment(DepartmentDto departmentDto)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateDepartment(int departmentId, DepartmentDto departmentDto)
         {
-            var department = new Department
+            try
             {
-                Name = departmentDto.Name,
-                Phone = departmentDto.Phone
-            };
+                var currentDepartment = await _departmentRepository.GetDepartmentById(departmentId);
+                if (currentDepartment == null)
+                    return NotFound();
 
-            await _departmentRepository.UpdateDepartment(department);
+                var updatedDepartment = new Department
+                {
+                    Name = departmentDto.Name,
+                    Phone = departmentDto.Phone,
+                    CompanyId = currentDepartment.CompanyId,
+                };
 
-            return NoContent();
+                await _departmentRepository.UpdateDepartment(currentDepartment,updatedDepartment);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

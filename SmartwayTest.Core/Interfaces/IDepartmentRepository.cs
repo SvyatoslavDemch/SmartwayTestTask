@@ -13,6 +13,6 @@ namespace SmartwayTest.Core.Interfaces
         Task<Department> GetDepartmentById(int departmentId);
         Task<List<Employee>> GetEmployeesByDepartmentId(int departmentId);
         Task DeleteDepartment(int departmentId);
-        Task UpdateDepartment(Department department);
+        Task UpdateDepartment(Department currentDepartment, Department updatedDepartment);
     }
 }

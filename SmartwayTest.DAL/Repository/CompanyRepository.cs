@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Identity.Client;
 using SmartwayTest.Core.Interfaces;
 using SmartwayTest.Core.Models;
+using SmartwayTest.DAL.Services;
 using System.Data;
 
 namespace SmartwayTest.DAL.Repository
@@ -10,9 +11,11 @@ namespace SmartwayTest.DAL.Repository
     public class CompanyRepository : ICompanyRepository
     {
         private readonly IDbConnection _dbConnection;
-        public CompanyRepository(IDbConnection dbConnection)
+        private readonly EntityUpdateScriptGenerator _scriptGenerator;
+        public CompanyRepository(IDbConnection dbConnection, EntityUpdateScriptGenerator scriptGenerator)
         {
             _dbConnection = dbConnection;
+            _scriptGenerator = scriptGenerator;
         }
 
         public async Task<int> CreateCompany(Company company)
@@ -35,7 +38,7 @@ namespace SmartwayTest.DAL.Repository
         public async Task<Company> GetCompanyById(int companyId)
         {
             string sql = "SELECT * FROM Companies WHERE Id = @CompanyId";
-            var company = await _dbConnection.QuerySingleAsync<Company>(sql, new { CompanyId = companyId });
+            var company = await _dbConnection.QuerySingleOrDefaultAsync<Company>(sql, new { CompanyId = companyId });
             return company;
         }
 
@@ -70,13 +73,18 @@ namespace SmartwayTest.DAL.Repository
             return employees.ToList();            
         }
 
-        public async Task UpdateCompany(Company company)
+        public async Task UpdateCompany(Company currentCompany, Company updatedCompany)
         {
-            string sql = @"UPDATE COMPANIES 
-                            SET Name = @Name
-                            where id = @Id ";
+            try
+            {
+                var update = _scriptGenerator.CreateUpdateScript<Company>(currentCompany, updatedCompany);
 
-            await _dbConnection.ExecuteAsync(sql, company);
+                await _dbConnection.ExecuteAsync(update.script, update.parameters);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }

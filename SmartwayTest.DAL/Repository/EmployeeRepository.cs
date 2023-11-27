@@ -8,15 +8,18 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using SmartwayTest.DAL.Services;
 
 namespace SmartwayTest.DAL.Repository
 {
     public class EmployeeRepository : IEmployeeRepository
     {
         private readonly IDbConnection _dbConnection;
-        public EmployeeRepository(IDbConnection dbConnection)
+        private readonly EntityUpdateScriptGenerator _scriptGenerator;
+        public EmployeeRepository(IDbConnection dbConnection, EntityUpdateScriptGenerator scriptGenerator)
         {
             _dbConnection = dbConnection;
+            _scriptGenerator = scriptGenerator;
         }
         public async Task<int> CreateEmployee(Employee employee)
         {
@@ -99,21 +102,12 @@ namespace SmartwayTest.DAL.Repository
                 splitOn: "Id");
             return employee.FirstOrDefault();
         }
-
-        public async Task UpdatePassport(Passport passport)
-        {
-            string sql = @"UPDATE Passports SET 
-                                 Type = @Type, 
-                                 Number = @Number
-                                 where id = @Id";
-            await _dbConnection.ExecuteAsync(sql, passport);
-        }
         
         public async Task UpdateEmployee(Employee currentEmployee, Employee updatedEmployee)
         {
             try
             {
-                var update = CreateUpdateScript<Employee>(currentEmployee, updatedEmployee);
+                var update = _scriptGenerator.CreateUpdateScript<Employee>(currentEmployee, updatedEmployee);
 
                 await _dbConnection.ExecuteAsync(update.script, update.parameters);
             }
@@ -123,48 +117,25 @@ namespace SmartwayTest.DAL.Repository
             }
         }
 
-        private (string script, DynamicParameters parameters) CreateUpdateScript<T>(T currentObject, T updatedObject)
+        public async Task UpdatePassport(Passport currentPassport, Passport updatedPassport)
         {
-            var parameters = new DynamicParameters();
-            var changedFields = new List<string>();
-            var properties = typeof(T).GetProperties();
-            var tableName = GetTableName<T>();
-            var updateScript = new StringBuilder($"UPDATE {tableName} SET ");
-
-            foreach (var property in properties)
+            try
             {
-                if (property.PropertyType.IsClass && property.PropertyType != typeof(string) 
-                    || property.Name.Equals("Id",StringComparison.OrdinalIgnoreCase))
-                    continue;
+                var update = _scriptGenerator.CreateUpdateScript<Passport>(currentPassport, updatedPassport);
 
-                object currentValue = property.GetValue(currentObject);
-                object updatedValue = property.GetValue(updatedObject);
-
-                if (!object.Equals(currentValue, updatedValue))
-                {
-                    parameters.Add($"@{property.Name}", updatedValue);
-                    changedFields.Add(property.Name);
-                }
+                await _dbConnection.ExecuteAsync(update.script, update.parameters);
             }
-
-            if (changedFields.Count == 0)
-                throw new Exception("Не найдены значения для обновления");
-
-            var idProperty = properties.FirstOrDefault(p => p.Name == "Id");
-            if (idProperty != null)
+            catch (Exception ex)
             {
-                object idValue = idProperty.GetValue(currentObject);
-                parameters.Add("@Id", idValue);
+                throw new Exception(ex.Message);
             }
-            updateScript.Append(string.Join(", ", changedFields.Select(field => $"{field} = @{field}")));
-            updateScript.Append(" WHERE Id = @Id");
-
-            return (updateScript.ToString(), parameters);
         }
-        private string? GetTableName<T>()
+
+        public async Task<Passport> GetPassportById(int passportId)
         {
-            var tableAttribute = typeof(T).GetCustomAttributes(typeof(TableAttribute), true).First() as TableAttribute;
-            return tableAttribute?.Name;
+            string sql = "SELECT * FROM Passports WHERE Id = @PassportId";
+            var passport = await _dbConnection.QuerySingleAsync<Passport>(sql, new { PassportId = passportId });
+            return passport;
         }
     }
 }

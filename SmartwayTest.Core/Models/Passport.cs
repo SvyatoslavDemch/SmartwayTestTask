@@ -5,11 +5,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SmartwayTest.Core.Interfaces;
 
 namespace SmartwayTest.Core.Models
 {
     [Table("Passports")]
-    public class Passport
+    public class Passport : IEntity
     {
         public int Id { get; set; }
         public string Type { get; set; }

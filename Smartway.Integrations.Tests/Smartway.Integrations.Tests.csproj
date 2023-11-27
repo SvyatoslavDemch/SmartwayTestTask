@@ -9,10 +9,12 @@
   </PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="dbup" Version="5.0.37" />
 		<PackageReference Include="Effort.EF6" Version="2.2.17" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.25" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
 		<PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.8.0" />
+		<PackageReference Include="Testcontainers.MsSql" Version="3.6.0" />
 		<PackageReference Include="xunit.assert" Version="2.6.2" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.6.2" />
 		<PackageReference Include="xunit" Version="2.6.2" />

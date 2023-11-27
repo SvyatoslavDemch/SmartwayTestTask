@@ -117,6 +117,7 @@ namespace SmartwayTest.API.Controllers
         /// </returns>
         [HttpPut("{employeeId}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> UpdateEmployee(int employeeId, [FromBody] EmployeeDto employeeDto)
         {
@@ -137,7 +138,7 @@ namespace SmartwayTest.API.Controllers
 
                 return NoContent();
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -147,19 +148,34 @@ namespace SmartwayTest.API.Controllers
         /// Обновляет информацию о паспорте сотрудника.
         /// </summary>
         /// <param name="passportDto">Обновленная информация о паспорте.</param>
-        /// <returns>Возвращает NoContent, если информация о паспорте успешно обновлена.</returns>
-        [HttpPut("passports")]
+        /// <returns>
+        /// Возвращает NoContent, если информация о паспорт успешно обновлена.
+        /// В случае ошибки при обновлении возвращает BadRequest с описанием ошибки.
+        /// Если паспорт с указанным идентификатором не найден, возвращает NotFound.
+        /// </returns>
+        [HttpPut("/api/passports/{passportId}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdatePassport(PassportDto passportDto)
+        public async Task<IActionResult> UpdatePassport(int passportId,PassportDto passportDto)
         {
-            var passport = new Passport
+            try
             {
-                Number = passportDto.Number,
-                Type = passportDto.Type
-            };
-            await _employeeRepository.UpdatePassport(passport);
+                var currentPassport = await _employeeRepository.GetPassportById(passportId);
+                var updatedPassport = new Passport
+                {
+                    Number = passportDto.Number,
+                    Type = passportDto.Type,
+                    EmployeeId = currentPassport.EmployeeId,
+                };
+                await _employeeRepository.UpdatePassport(currentPassport,updatedPassport);
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }

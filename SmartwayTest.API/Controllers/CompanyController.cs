@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure;
 using SmartwayTest.API.Dtos;
 using SmartwayTest.Core.Interfaces;
 using SmartwayTest.Core.Models;
@@ -113,18 +114,36 @@ namespace SmartwayTest.API.Controllers
         /// Обновляет информацию о компании на основе предоставленных данных.
         /// </summary>
         /// <param name="companyDto">DTO с обновленными данными о компании.</param>
-        /// <returns>204 No Content после успешного обновления информации о компании.</returns>
-        [HttpPut]
+        /// <returns>
+        /// 204 No Content после успешного обновления информации о компании.
+        /// В случае ошибки при обновлении возвращает BadRequest с описанием ошибки.
+        /// Если компания с указанным идентификатором не найдена, возвращает NotFound.
+        /// </returns>
+        [HttpPut("{companyId}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateCompany(CompanyDto companyDto)
+        public async Task<IActionResult> UpdateCompany(int companyId, CompanyDto companyDto)
         {
-            var company = new Company
+            try
             {
-                Name = companyDto.Name
-            };
-            await _companyRepository.UpdateCompany(company);
+                var currentCompany = await _companyRepository.GetCompanyById(companyId);
+                if (currentCompany == null)
+                    return NotFound();
 
-            return NoContent();
+                var updatedCompany = new Company
+                {
+                    Name = companyDto.Name
+                };
+                await _companyRepository.UpdateCompany(currentCompany, updatedCompany);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
+
     }
 }

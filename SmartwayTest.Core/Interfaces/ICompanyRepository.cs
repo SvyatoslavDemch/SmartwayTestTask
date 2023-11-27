@@ -13,6 +13,6 @@ namespace SmartwayTest.Core.Interfaces
         Task<Company> GetCompanyById(int companyId);        
         Task<List<Employee>> GetEmployeesByCompanyId(int companyId);
         Task DeleteCompany(int companyId);
-        Task UpdateCompany(Company company);
+        Task UpdateCompany(Company currentCompany, Company updatedCompany);
     }
 }

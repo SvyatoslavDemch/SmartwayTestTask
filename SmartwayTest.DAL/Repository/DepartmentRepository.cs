@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using SmartwayTest.Core.Interfaces;
 using SmartwayTest.Core.Models;
+using SmartwayTest.DAL.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -12,13 +13,15 @@ using System.Threading.Tasks;
 
 namespace SmartwayTest.DAL.Repository
 {
-    
+
     public class DepartmentRepository : IDepartmentRepository
     {
         private readonly IDbConnection _dbConnection;
-        public DepartmentRepository(IDbConnection dbConnection)
+        private readonly EntityUpdateScriptGenerator _scriptGenerator;
+        public DepartmentRepository(IDbConnection dbConnection, EntityUpdateScriptGenerator scriptGenerator)
         {
             _dbConnection = dbConnection;
+            _scriptGenerator = scriptGenerator;
         }
         public async Task<int> CreateDepartment(Department department)
         {
@@ -40,7 +43,7 @@ namespace SmartwayTest.DAL.Repository
         public async Task<Department> GetDepartmentById(int departmentId)
         {
             string sql = "SELECT * FROM Departments WHERE Id = @DepartmentId";
-            var department = await _dbConnection.QuerySingleAsync<Department>(sql, new { DepartmentId = departmentId });
+            var department = await _dbConnection.QuerySingleOrDefaultAsync<Department>(sql, new { DepartmentId = departmentId });
             return department;
         }
 
@@ -76,14 +79,18 @@ namespace SmartwayTest.DAL.Repository
             return employees.ToList();
         }
 
-        public async Task UpdateDepartment(Department department)
+        public async Task UpdateDepartment(Department currentDepartment, Department updatedDepartment)
         {
-            string sql = @"UPDATE Departments set
-                            Name = @Name,
-                            Phone = @Phone where id = @DepartmentId";
+            try
+            {
+                var update = _scriptGenerator.CreateUpdateScript<Department>(currentDepartment, updatedDepartment);
 
-            await _dbConnection.ExecuteAsync(sql, department);
-
+                await _dbConnection.ExecuteAsync(update.script, update.parameters);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }

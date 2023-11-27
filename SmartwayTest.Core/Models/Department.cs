@@ -6,11 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic;
+using SmartwayTest.Core.Interfaces;
 
 namespace SmartwayTest.Core.Models
 {
     [Table("Departments")]
-    public class Department
+    public class Department : IEntity
     {
         public int Id { get; set; }
         public string Name { get; set; }

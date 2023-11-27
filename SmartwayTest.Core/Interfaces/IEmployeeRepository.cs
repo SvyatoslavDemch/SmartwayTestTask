@@ -13,7 +13,8 @@ namespace SmartwayTest.Core.Interfaces
         Task<Employee?> GetEmployeeById(int employeeId);
         Task DeleteEmployee(int employeeId);
         Task UpdateEmployee(Employee currentEmployee, Employee updatedEmployee);
-        Task UpdatePassport(Passport passport);
+        Task UpdatePassport(Passport currentPassport, Passport updatedPassport);
+        Task<Passport> GetPassportById(int passportId);
 
     }
 }

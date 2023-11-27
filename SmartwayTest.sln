@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartwayTest.API", "Smartwa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartwayTest.Core", "SmartwayTest.Core\SmartwayTest.Core.csproj", "{6E38ECB8-5EC8-45EF-A592-9995053F89E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smartway.Integrations.Tests", "Smartway.Integrations.Tests\Smartway.Integrations.Tests.csproj", "{C0444D1E-0517-4A0D-A64F-0A4DA3823CC4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Smartway.Integrations.Tests", "Smartway.Integrations.Tests\Smartway.Integrations.Tests.csproj", "{C0444D1E-0517-4A0D-A64F-0A4DA3823CC4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{6E38ECB8-5EC8-45EF-A592-9995053F89E4} = {6E38ECB8-5EC8-45EF-A592-9995053F89E4}
 		{840EF02F-94F5-4C3A-8494-380CA50720E4} = {840EF02F-94F5-4C3A-8494-380CA50720E4}
